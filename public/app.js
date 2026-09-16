@@ -62,6 +62,7 @@ function pushLog(label, text) {
   line.innerHTML = `<span class="log-label">${label}</span>${text}`;
   el.appendChild(line);
   el.scrollTop = el.scrollHeight;
+  document.getElementById('activity-summary').textContent = `${label} · ${text.replace(/&rarr;/g, '→')}`;
 }
 
 // ---------- rendering ----------
@@ -75,27 +76,28 @@ function renderTree() {
     for (const childId of children) {
       const b = coord(childId);
       const cls = edgeClass(childId);
-      parts.push(`<line x1="${a.cx}" y1="${a.cy}" x2="${b.cx}" y2="${b.cy}" class="${cls}" />`);
+      const midY = (a.cy + b.cy) / 2;
+      parts.push(`<path d="M ${a.cx} ${a.cy + 14} C ${a.cx} ${midY}, ${b.cx} ${midY}, ${b.cx} ${b.cy - 18}" class="tree-edge ${cls}" />`);
     }
   }
 
   for (const id of [ROOT_ID, ...ALL_IDS]) {
     const { cx, cy } = coord(id);
     if (id === ROOT_ID) {
-      parts.push(`<circle cx="${cx}" cy="${cy}" r="9" class="node-root" />`);
-      parts.push(`<text x="${cx}" y="${cy - 14}" class="label">START</text>`);
+      parts.push(`<rect x="${cx - 30}" y="${cy - 14}" width="60" height="28" rx="14" class="node-root" />`);
+      parts.push(`<text x="${cx}" y="${cy + 4}" class="root-label">START</text>`);
       continue;
     }
     const info = nodeInfo(id);
     let cls = info.known ? 'node-discovered' : 'node-unknown';
     if (info.isCurrent) cls += ' node-current';
-    parts.push(`<circle cx="${cx}" cy="${cy}" r="13" class="${cls}" />`);
+    parts.push(`<circle cx="${cx}" cy="${cy}" r="17" class="node ${cls}" />`);
     if (info.known) {
       parts.push(`<text x="${cx}" y="${cy + 4}" class="score">${info.score}</text>`);
     } else {
       parts.push(`<text x="${cx}" y="${cy + 4}" class="unknown-mark">?</text>`);
     }
-    parts.push(`<text x="${cx}" y="${cy + 24}" class="label">${id}</text>`);
+    if (info.known) parts.push(`<text x="${cx}" y="${cy + 30}" class="label">${id}</text>`);
   }
 
   svg.innerHTML = parts.join('');
@@ -127,20 +129,92 @@ function renderDreamTable(html) {
   document.getElementById('dream-table').innerHTML = html;
 }
 
+function phaseStep() {
+  if (app.phase.startsWith('dream')) return 2;
+  if (app.phase.startsWith('r2')) return 3;
+  if (app.phase === 'final') return 4;
+  return 1;
+}
+
+function displayedBest() {
+  if (app.phase === 'dream-done' && app.dreamResults.length) {
+    return Math.max(...app.dreamResults.map((result) => result.bestScore));
+  }
+  const history = app.overlay?.history || app.baseHistory;
+  let ids;
+  if (app.phase.startsWith('dream')) {
+    ids = [...(app.overlay?.creditedSet || [])];
+  } else {
+    ids = Object.keys(history.nodes).filter((id) => history.nodes[id].expanded);
+  }
+  const scores = ids.map((id) => history.nodes[id]?.score).filter(Number.isFinite);
+  return scores.length ? Math.max(...scores) : null;
+}
+
+function searchesLeft() {
+  if (app.phase === 'r1-intro' || app.phase === 'r2-intro') return BUDGET;
+  if (app.phase === 'r1-running' || app.phase === 'r2-running' || app.phase === 'dream-running') {
+    return Math.max(0, BUDGET - (app.overlay?.creditedSet?.size || 0));
+  }
+  return 0;
+}
+
+function renderChrome() {
+  const step = phaseStep();
+  document.querySelectorAll('.phase-step').forEach((el) => {
+    const n = Number(el.dataset.step);
+    el.classList.toggle('is-current', n === step);
+    el.classList.toggle('is-complete', n < step || step === 4);
+  });
+
+  const mode = document.getElementById('mode-badge');
+  if (app.phase === 'final') {
+    mode.className = 'mode-badge mode-complete';
+    mode.innerHTML = '<i></i> Loop complete';
+  } else if (app.phase.startsWith('dream')) {
+    mode.className = 'mode-badge mode-dream';
+    mode.innerHTML = '<i></i> Dream replay';
+  } else {
+    mode.className = 'mode-badge mode-real';
+    mode.innerHTML = '<i></i> Reality';
+  }
+
+  const history = app.overlay?.history || app.baseHistory;
+  document.getElementById('metric-best').textContent = displayedBest() ?? '—';
+  document.getElementById('metric-budget').textContent = searchesLeft();
+  document.getElementById('metric-known').textContent = Object.keys(history.nodes).length;
+
+  const caption = document.getElementById('tree-caption');
+  if (app.phase.startsWith('dream')) {
+    caption.textContent = 'Replaying saved history. Violet paths cost no new real-world searches.';
+  } else if (app.phase.startsWith('r2')) {
+    caption.textContent = 'The improved policy is back in reality, revealing genuinely new nodes.';
+  } else if (app.phase === 'final') {
+    caption.textContent = 'History made the strategy better. Better strategy created richer history.';
+  } else {
+    caption.textContent = 'Scores are visible. What lies beneath each branch is still hidden.';
+  }
+}
+
 function renderAll() {
   renderTree();
+  renderChrome();
 }
 
 // ---------- Round 1 ----------
 function showRound1Intro() {
   app.phase = 'r1-intro';
   renderRoundInfo(`
-    <h3>ROUND 1</h3>
-    <p>Budget: <strong>${BUDGET}</strong> searches</p>
-    <p>Policy: <span class="pill pill-real">Deep</span> &mdash; keep improving the best branch.</p>
-    <p>This policy is deliberately naive: it always continues into the first branch it sees, and never looks back.</p>
+    <p class="stage-label">Step 1 · Explore reality</p>
+    <h3>Start with a<br />naive strategy.</h3>
+    <p>We have <strong>${BUDGET} searches</strong>. The model can see four starting scores, but nothing underneath them.</p>
+    <div class="policy-line"><span>Current strategy</span><span class="pill pill-real">Deep</span></div>
+    <div class="explain-box">
+      <strong>How “Deep” behaves</strong>
+      It takes the first branch it sees and keeps going. It never looks back.
+    </div>
   `);
-  renderControls(`<button id="run-real">RUN REAL WORLD</button>`);
+  renderControls(`<button id="run-real">Run the first search <span aria-hidden="true">→</span></button><p class="button-note">Watch five real searches happen one by one.</p>`);
   document.getElementById('run-real').addEventListener('click', runRound1);
   renderDreamTable('');
   renderAll();
@@ -151,10 +225,11 @@ function showRound1Intro() {
 
 async function runRound1() {
   app.phase = 'r1-running';
-  renderControls(`<button disabled>Exploring...</button>`);
+  renderControls(`<button disabled>Exploring reality…</button><p class="button-note">New branches can appear here.</p>`);
   pushLog('SYSTEM', 'Round 1 begins. Policy: Deep.');
 
   app.overlay = { mode: 'real', history: app.baseHistory, creditedSet: new Set(), currentNodeId: null };
+  renderAll();
 
   const result = explore(deepPolicy(), BUDGET, null, ({ nodeId, newlyRevealed }) => {
     app.overlay.currentNodeId = nodeId;
@@ -170,12 +245,15 @@ async function runRound1() {
   renderAll();
 
   renderRoundInfo(`
-    <h3>ROUND 1 &mdash; done</h3>
-    <p>Best score found: <strong>${result.bestScore}</strong></p>
-    <p>Searches used: <strong>${result.credited.length}</strong></p>
-    <p class="quote">We have now created HISTORY.</p>
+    <p class="stage-label">Reality complete</p>
+    <h3>Five searches created a history.</h3>
+    <p>The naive strategy reached <strong>${result.bestScore}</strong>. More importantly, every choice and outcome is now saved.</p>
+    <div class="explain-box good">
+      <strong>We now have a replayable map</strong>
+      The system can test other strategies against what it already discovered.
+    </div>
   `);
-  renderControls(`<button id="start-dream" class="dream-btn">START DREAMING</button>`);
+  renderControls(`<button id="start-dream" class="dream-btn">Use history to dream <span aria-hidden="true">→</span></button><p class="button-note">No model calls. No new solutions.</p>`);
   document.getElementById('start-dream').addEventListener('click', showDreamIntro);
 }
 
@@ -207,19 +285,24 @@ function showDreamIntro() {
   app.overlay = { mode: 'real', history: app.baseHistory, creditedSet: new Set(app.round1.credited), currentNodeId: null };
   renderAll();
   renderRoundInfo(`
-    <h3>DREAM</h3>
-    <p>We will test other search strategies using the history we already collected.</p>
-    <p><strong>No new solutions will be generated.</strong></p>
+    <p class="stage-label dream">Step 2 · Dream on history</p>
+    <h3>Try three strategies for free.</h3>
+    <p>Each strategy will navigate the <strong>same saved history</strong> as if it had been in control.</p>
+    <div class="explain-box dream">
+      <strong>Watch the visual difference</strong>
+      Violet paths move through existing nodes. No new node can appear during a dream.
+    </div>
   `);
-  renderControls(`<button id="start-dreaming" class="dream-btn">START DREAMING</button>`);
+  renderControls(`<button id="start-dreaming" class="dream-btn">Replay all three strategies <span aria-hidden="true">→</span></button><p class="button-note">Same history. Same five-search budget.</p>`);
   document.getElementById('start-dreaming').addEventListener('click', runDreamSequence);
 }
 
 async function runDreamSequence() {
   app.phase = 'dream-running';
-  renderControls(`<button disabled class="dream-btn">Dreaming...</button>`);
+  renderControls(`<button disabled class="dream-btn">Replaying history…</button><p class="button-note">Nothing new is being generated.</p>`);
   app.dreamResults = [];
   renderDreamTable(dreamTableHTML());
+  renderAll();
 
   for (const policy of POLICIES) {
     pushLog('DREAM', `Testing "${policy.name}"`);
@@ -256,19 +339,16 @@ async function runDreamSequence() {
 
 function dreamTableHTML() {
   if (app.dreamResults.length === 0) {
-    return `<h3>DREAM RESULTS</h3><p>Waiting for replays...</p>`;
+    return `<h4>Replay results</h4><div class="result-row"><span><i></i>Waiting for the first replay…</span><strong>—</strong></div>`;
   }
   const maxScore = Math.max(...app.dreamResults.map((r) => r.bestScore));
   const rows = app.dreamResults.map((r) => {
     const isWinner = r.bestScore === maxScore;
-    return `<tr class="${isWinner ? 'winner' : ''}"><td>${r.policy.name}</td><td>${r.credited.length}</td><td>${r.bestScore}</td></tr>`;
+    return `<div class="result-row ${isWinner ? 'winner' : ''}"><span><i></i>${r.policy.name} <small class="result-meta">${r.credited.length} searches</small></span><strong>${r.bestScore}</strong></div>`;
   }).join('');
   return `
-    <h3>DREAM RESULTS</h3>
-    <table>
-      <thead><tr><th>Policy</th><th>Searches</th><th>Best discovered</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <h4>Replay results · best reached</h4>
+    <div class="result-list">${rows}</div>
   `;
 }
 
@@ -281,20 +361,22 @@ function finishDreaming() {
 
   pushLog('SYSTEM', `New exploration policy: ${winner.policy.name}`);
 
-  const neverOpened = ALL_IDS.filter((id) => !app.baseHistory.nodes[id]);
   const neverOpenedTop = TOP_LEVEL.filter((id) => app.baseHistory.nodes[id] && !app.baseHistory.nodes[id].expanded);
 
   app.overlay = { mode: 'dream', history: app.baseHistory, creditedSet: new Set(), currentNodeId: null };
   renderAll();
 
   renderRoundInfo(`
-    <h3>DREAM &mdash; done</h3>
-    <p><strong>${winner.policy.name}</strong> found the best result: <strong>${maxScore}</strong></p>
-    <p class="quote">Nothing new was generated during this experiment.</p>
-    <p class="quote">We changed only the strategy used to navigate existing history.</p>
-    ${neverOpenedTop.length ? `<p>Limitation: branch${neverOpenedTop.length > 1 ? 'es' : ''} <strong>${neverOpenedTop.join(', ')}</strong> ${neverOpenedTop.length > 1 ? 'were' : 'was'} never opened. Dreaming can only learn from what we've already explored &mdash; it cannot know what's hiding under ${neverOpenedTop.length > 1 ? 'them' : 'it'}.</p>` : ''}
+    <p class="stage-label dream">Dream complete</p>
+    <h3>History revealed a better strategy.</h3>
+    <p><strong>${winner.policy.name}</strong> reached <strong>${maxScore}</strong> by navigating the old history differently.</p>
+    <div class="explain-box dream">
+      <strong>Nothing new was generated</strong>
+      We changed only the strategy used to navigate existing history.
+    </div>
+    ${neverOpenedTop.length ? `<div class="explain-box"><strong>The honest limitation</strong> ${neverOpenedTop.length === 1 ? 'Branch' : 'Branches'} ${neverOpenedTop.join(', ')} ${neverOpenedTop.length === 1 ? 'was' : 'were'} never opened in reality. Dreaming cannot know what is hiding beneath ${neverOpenedTop.length === 1 ? 'it' : 'them'}.</div>` : ''}
   `);
-  renderControls(`<button id="explore-again">EXPLORE AGAIN</button>`);
+  renderControls(`<button id="explore-again">Take the better strategy to reality <span aria-hidden="true">→</span></button>`);
   document.getElementById('explore-again').addEventListener('click', showRound2Intro);
 }
 
@@ -302,22 +384,29 @@ function finishDreaming() {
 function showRound2Intro() {
   app.phase = 'r2-intro';
   renderRoundInfo(`
-    <h3>ROUND 2</h3>
-    <p>Previous policy: <span class="pill pill-real">Deep</span></p>
-    <p>Dream selected: <span class="pill pill-dream">${app.chosenPolicy.name}</span></p>
-    <p>Budget: <strong>${BUDGET}</strong> more searches, using the new policy.</p>
+    <p class="stage-label">Step 3 · Explore again</p>
+    <h3>Same model.<br />Smarter search.</h3>
+    <p>We return to reality with <strong>${BUDGET} new searches</strong> and the strategy chosen in the dream.</p>
+    <div class="policy-line"><span class="pill pill-real">Deep</span><span aria-hidden="true">→</span><span class="pill pill-dream">${app.chosenPolicy.name}</span></div>
+    <div class="explain-box">
+      <strong>What changes now?</strong>
+      The new strategy explores broadly before committing to the best-looking branch.
+    </div>
   `);
-  renderControls(`<button id="explore-again-2">EXPLORE AGAIN</button>`);
+  renderControls(`<button id="explore-again-2">Run the improved search <span aria-hidden="true">→</span></button><p class="button-note">This is reality again, so new nodes can appear.</p>`);
   document.getElementById('explore-again-2').addEventListener('click', runRound2);
+  renderAll();
 }
 
 async function runRound2() {
   app.phase = 'r2-running';
-  renderControls(`<button disabled>Exploring...</button>`);
+  renderControls(`<button disabled>Exploring with the new strategy…</button><p class="button-note">New real-world outcomes are being added to history.</p>`);
   pushLog('SYSTEM', `Round 2 begins. Policy: ${app.chosenPolicy.name}.`);
 
   const historyBefore = app.baseHistory;
   const result = explore(app.chosenPolicy.factory(BUDGET), BUDGET, historyBefore);
+  app.overlay = { mode: 'real', history: historyBefore, creditedSet: new Set(), currentNodeId: null };
+  renderAll();
 
   await animateReal(result, historyBefore);
 
@@ -328,39 +417,37 @@ async function runRound2() {
   renderAll();
 
   renderRoundInfo(`
-    <h3>ROUND 2 &mdash; done</h3>
-    <p>Best score found this round: <strong>${result.bestScore}</strong></p>
-    <p>Best score ever found: <strong>${cumulativeBest}</strong></p>
-    <p>Because it explored differently, it discovered new nodes.</p>
+    <p class="stage-label">Reality complete</p>
+    <h3>The better strategy found an 80.</h3>
+    <p>Round 1 stopped at <strong>${app.round1.bestScore}</strong>. With the same model and the same budget, Round 2 reached <strong>${cumulativeBest}</strong>.</p>
+    <div class="explain-box good">
+      <strong>The strategy improved, not the model</strong>
+      Dreaming changed where the next five real searches were spent.
+    </div>
   `);
-  renderControls(`<button id="see-final">SEE THE FULL LOOP</button>`);
+  renderControls(`<button id="see-final">See the whole loop <span aria-hidden="true">→</span></button>`);
   document.getElementById('see-final').addEventListener('click', showFinal);
 }
 
 // ---------- Final ----------
 function showFinal() {
   app.phase = 'final';
-  const stillHidden = ALL_IDS.filter((id) => !app.baseHistory.nodes[id] || !app.baseHistory.nodes[id].expanded);
   const stillHiddenTop = TOP_LEVEL.filter((id) => app.baseHistory.nodes[id] && !app.baseHistory.nodes[id].expanded);
+  renderDreamTable('');
 
   renderRoundInfo(`
-    <h3>That's Dream-RSI.</h3>
-    <div class="final-loop">REALITY
-  ↓ explore
-HISTORY
-  ↓ dream
-BETTER POLICY
-  ↓
-REALITY
-  ↓ more history
-  ↓ dream again
-  ↓
-...</div>
-    <p class="quote">The system improves how it searches without changing the underlying model.</p>
-    ${stillHiddenTop.length ? `<p>And the limitation is still there: branch <strong>${stillHiddenTop.join(', ')}</strong> was never opened, across either round. Whatever is hiding underneath it stays invisible until a real round finally goes and looks.</p>` : ''}
+    <p class="stage-label">The recursive loop</p>
+    <h3>That’s Dream-RSI.</h3>
+    <div class="final-loop" aria-label="Reality creates history, history improves the policy, and the policy returns to reality">
+      <span class="loop-step">Reality</span><span class="loop-step">History</span><span class="loop-step">Better policy</span>
+      <span class="loop-step">More reality</span><span class="loop-step">More history</span><span class="loop-step">Improve again</span>
+    </div>
+    <p>The system improves <strong>how it searches</strong> without changing the underlying model.</p>
+    ${stillHiddenTop.length ? `<div class="explain-box"><strong>The limitation remains</strong> Branch ${stillHiddenTop.join(', ')} was never opened. Its hidden score stays unknowable until a future real search looks there.</div>` : ''}
   `);
-  renderControls(`<button id="restart">RESTART</button>`);
+  renderControls(`<button id="restart">Run it again <span aria-hidden="true">↻</span></button>`);
   document.getElementById('restart').addEventListener('click', () => window.location.reload());
+  renderAll();
 }
 
 // ---------- boot ----------

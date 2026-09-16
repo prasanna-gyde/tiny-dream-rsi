@@ -26,3 +26,5 @@ Inspired by the Dream-RSI paper.
 This is an educational implementation.
 It is not the authors' implementation and does not attempt
 to reproduce their experimental results.
+
+Licensed under the [Apache License 2.0](LICENSE).
