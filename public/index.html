@@ -3,36 +3,104 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tiny Dream-RSI</title>
+  <meta name="description" content="A tiny interactive explanation of Dream-RSI: use yesterday's search history to improve tomorrow's search strategy." />
+  <title>Tiny Dream-RSI — See search improve itself</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="app-header">
-    <h1>Tiny Dream-RSI</h1>
-    <p class="tagline">The model stays the same. <span>The search strategy improves.</span></p>
-  </header>
-
-  <main class="app-main">
-    <section class="tree-panel">
-      <div class="legend">
-        <span><i class="dot dot-unknown"></i> Unknown</span>
-        <span><i class="dot dot-discovered"></i> Discovered</span>
-        <span><i class="dot dot-current"></i> Currently selected</span>
+  <div class="page-shell">
+    <header class="app-header">
+      <div class="brand-row">
+        <a class="brand" href="/" aria-label="Restart Tiny Dream-RSI">
+          <span class="brand-mark" aria-hidden="true">D</span>
+          <span>Tiny Dream-RSI</span>
+        </a>
+        <a class="paper-link" href="https://dream-rsi.com/assets/dream-rsi.pdf" target="_blank" rel="noreferrer">
+          Inspired by the paper <span aria-hidden="true">↗</span>
+        </a>
       </div>
-      <svg id="tree-svg" viewBox="0 0 760 380" preserveAspectRatio="xMidYMid meet"></svg>
-    </section>
 
-    <section class="side-panel">
-      <div id="round-info" class="panel-block"></div>
-      <div id="controls" class="panel-block"></div>
-      <div id="dream-table" class="panel-block"></div>
-    </section>
-  </main>
+      <div class="hero-copy">
+        <p class="eyebrow">Interactive explainer · 2 minutes</p>
+        <h1>See a search strategy<br />learn from its own history.</h1>
+        <p>The model stays the same. <strong>The way it explores gets better.</strong></p>
+      </div>
 
-  <footer class="app-footer">
-    <h2>Event Log</h2>
-    <div id="event-log"></div>
-  </footer>
+      <ol id="phase-rail" class="phase-rail" aria-label="Demo progress">
+        <li class="phase-step is-current" data-step="1">
+          <span class="step-number">1</span>
+          <span><strong>Explore</strong><small>Search the real world</small></span>
+        </li>
+        <li class="phase-step" data-step="2">
+          <span class="step-number">2</span>
+          <span><strong>Dream</strong><small>Replay saved history</small></span>
+        </li>
+        <li class="phase-step" data-step="3">
+          <span class="step-number">3</span>
+          <span><strong>Improve</strong><small>Search again, smarter</small></span>
+        </li>
+      </ol>
+    </header>
+
+    <main class="app-main">
+      <section class="tree-card" aria-labelledby="tree-title">
+        <div class="tree-card-header">
+          <div>
+            <p class="section-kicker">The search space</p>
+            <h2 id="tree-title">Discovery map</h2>
+          </div>
+          <span id="mode-badge" class="mode-badge mode-real"><i></i> Reality</span>
+        </div>
+
+        <div class="metric-row" aria-label="Current search metrics">
+          <div class="metric">
+            <span>Best reached</span>
+            <strong id="metric-best">—</strong>
+          </div>
+          <div class="metric">
+            <span>Searches left</span>
+            <strong id="metric-budget">5</strong>
+          </div>
+          <div class="metric">
+            <span>Nodes known</span>
+            <strong id="metric-known">4</strong>
+          </div>
+        </div>
+
+        <div class="tree-stage">
+          <svg id="tree-svg" viewBox="0 0 760 410" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A hidden solution tree that is revealed as the search explores"></svg>
+        </div>
+
+        <div class="tree-footer">
+          <div class="legend" aria-label="Tree legend">
+            <span><i class="dot dot-discovered"></i> Known</span>
+            <span><i class="dot dot-current"></i> Being explored</span>
+            <span><i class="dot dot-unknown"></i> Hidden</span>
+          </div>
+          <p id="tree-caption">Scores are visible. What lies beneath each branch is still hidden.</p>
+        </div>
+      </section>
+
+      <aside class="story-card" aria-label="Current step">
+        <div id="round-info" class="story-content"></div>
+        <div id="dream-table" class="results-block"></div>
+        <div id="controls" class="action-block"></div>
+      </aside>
+    </main>
+
+    <details class="activity-panel">
+      <summary>
+        <span class="activity-title"><i></i> Activity</span>
+        <span id="activity-summary" class="activity-summary">Ready to begin</span>
+        <span class="activity-toggle">View trace <b aria-hidden="true">⌄</b></span>
+      </summary>
+      <div id="event-log" aria-live="polite"></div>
+    </details>
+
+    <footer class="site-footer">
+      <p>A tiny teaching toy. No model training. No new model weights.</p>
+    </footer>
+  </div>
 
   <script type="module" src="app.js"></script>
 </body>
