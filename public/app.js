@@ -31,9 +31,9 @@ function layoutTree() {
 const POS = layoutTree();
 const ALL_IDS = Object.keys(world);
 const SPACING_X = 68;
-const SPACING_Y = 78;
+const SPACING_Y = 66;
 const OFFSET_X = 40;
-const OFFSET_Y = 30;
+const OFFSET_Y = 34;
 
 function coord(id) {
   const p = POS[id];

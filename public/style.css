@@ -75,6 +75,22 @@ button, a { -webkit-tap-highlight-color: transparent; }
   box-shadow: 0 5px 14px rgba(23, 32, 51, 0.2);
 }
 
+.brand-mark svg {
+  width: 18px;
+  height: 18px;
+  overflow: visible;
+}
+
+.brand-mark path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.brand-mark circle { fill: currentColor; }
+
 .paper-link {
   color: var(--ink-soft);
   font-size: 0.8rem;
