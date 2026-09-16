@@ -144,6 +144,9 @@ function showRound1Intro() {
   document.getElementById('run-real').addEventListener('click', runRound1);
   renderDreamTable('');
   renderAll();
+
+  const startingBranches = TOP_LEVEL.map((id) => `${id}=${world[id].score}`).join(', ');
+  pushLog('SYSTEM', `Starting branches visible: ${startingBranches}. Nothing else is known yet.`);
 }
 
 async function runRound1() {
