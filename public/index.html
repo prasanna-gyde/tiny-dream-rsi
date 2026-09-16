@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tiny Dream-RSI</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>Tiny Dream-RSI</h1>
+    <p class="tagline">The model stays the same. <span>The search strategy improves.</span></p>
+  </header>
+
+  <main class="app-main">
+    <section class="tree-panel">
+      <div class="legend">
+        <span><i class="dot dot-unknown"></i> Unknown</span>
+        <span><i class="dot dot-discovered"></i> Discovered</span>
+        <span><i class="dot dot-current"></i> Currently selected</span>
+      </div>
+      <svg id="tree-svg" viewBox="0 0 760 380" preserveAspectRatio="xMidYMid meet"></svg>
+    </section>
+
+    <section class="side-panel">
+      <div id="round-info" class="panel-block"></div>
+      <div id="controls" class="panel-block"></div>
+      <div id="dream-table" class="panel-block"></div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <h2>Event Log</h2>
+    <div id="event-log"></div>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

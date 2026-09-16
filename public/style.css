@@ -1,0 +1,149 @@
+:root {
+  --bg: #0f1117;
+  --panel: #171a23;
+  --border: #2a2e3a;
+  --text: #e8e9ee;
+  --text-dim: #8b8f9c;
+  --real: #4fb0ff;
+  --dream: #b388ff;
+  --good: #35d48a;
+  --warn: #ffb454;
+  --node-unknown: #2a2e3a;
+  --node-discovered: #3a3f52;
+  --node-current: #ffd166;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+.app-header {
+  padding: 20px 24px 8px;
+  text-align: center;
+}
+.app-header h1 { margin: 0 0 4px; font-size: 1.6rem; }
+.tagline { margin: 0; color: var(--text-dim); }
+.tagline span { color: var(--text); font-weight: 600; }
+
+.app-main {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 16px;
+  padding: 12px 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+@media (max-width: 860px) {
+  .app-main { grid-template-columns: 1fr; }
+}
+
+.tree-panel, .panel-block {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+.dot-unknown { background: var(--node-unknown); border: 1px solid var(--border); }
+.dot-discovered { background: var(--node-discovered); }
+.dot-current { background: var(--node-current); }
+
+#tree-svg { width: 100%; height: auto; }
+
+.node-unknown { fill: var(--node-unknown); stroke: var(--border); stroke-width: 1; }
+.node-discovered { fill: var(--node-discovered); stroke: var(--text-dim); stroke-width: 1; }
+.node-current { fill: var(--node-current); stroke: #fff; stroke-width: 2; }
+.node-root { fill: var(--text); }
+
+.edge-unknown { stroke: var(--border); stroke-width: 1.5; }
+.edge-known { stroke: var(--text-dim); stroke-width: 1.5; }
+.edge-real { stroke: var(--real); stroke-width: 2.5; }
+.edge-dream { stroke: var(--dream); stroke-width: 2.5; stroke-dasharray: 5 4; }
+
+.label { fill: var(--text-dim); font-size: 10px; text-anchor: middle; }
+.score { fill: var(--bg); font-size: 11px; font-weight: 700; text-anchor: middle; }
+.unknown-mark { fill: var(--text-dim); font-size: 12px; text-anchor: middle; }
+
+.panel-block { margin-bottom: 12px; }
+.panel-block:last-child { margin-bottom: 0; }
+.panel-block h3 { margin: 0 0 8px; font-size: 0.95rem; }
+.panel-block p { margin: 4px 0; color: var(--text-dim); font-size: 0.9rem; line-height: 1.4; }
+.panel-block .quote { color: var(--text); font-style: italic; }
+
+.pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.pill-real { background: rgba(79,176,255,0.15); color: var(--real); }
+.pill-dream { background: rgba(179,136,255,0.15); color: var(--dream); }
+
+button {
+  background: var(--real);
+  color: #06121c;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 6px;
+}
+button:hover { filter: brightness(1.08); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+button.dream-btn { background: var(--dream); color: #16081f; }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--border); }
+tr.winner td { color: var(--good); font-weight: 700; }
+
+.app-footer {
+  max-width: 1200px;
+  margin: 0 auto 24px;
+  padding: 0 24px;
+}
+.app-footer h2 { font-size: 0.95rem; color: var(--text-dim); margin: 8px 0; }
+#event-log {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  height: 160px;
+  overflow-y: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+}
+.log-line { padding: 2px 0; }
+.log-label {
+  display: inline-block;
+  width: 60px;
+  font-weight: 700;
+}
+.log-real .log-label { color: var(--real); }
+.log-dream .log-label { color: var(--dream); }
+.log-system .log-label { color: var(--warn); }
+
+.final-loop {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  line-height: 1.9;
+  white-space: pre;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}

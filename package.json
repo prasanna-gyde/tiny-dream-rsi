@@ -1,0 +1,11 @@
+{
+  "name": "tiny-dream-rsi",
+  "version": "1.0.0",
+  "description": "A tiny visual demo of the Dream-RSI idea: the model doesn't improve, the search harness does.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "MIT"
+}
