@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1280" height="640" viewBox="0 0 1280 640">
+  <defs>
+    <linearGradient id="wash" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#edf5ff"/>
+    </linearGradient>
+    <clipPath id="screen-clip">
+      <rect x="682" y="64" width="534" height="512" rx="24"/>
+    </clipPath>
+    <filter id="soft-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#172033" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="640" fill="url(#wash)"/>
+  <circle cx="1170" cy="76" r="214" fill="#1478ff" opacity="0.06"/>
+  <circle cx="1100" cy="10" r="132" fill="none" stroke="#1478ff" stroke-width="2" opacity="0.12"/>
+
+  <g transform="translate(64 58)">
+    <rect width="44" height="44" rx="13" fill="#172033"/>
+    <path d="M22 34V22M22 22 13 13M22 22l9-9" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="13" cy="13" r="3.8" fill="#ffffff"/>
+    <circle cx="31" cy="13" r="3.8" fill="#ffffff"/>
+    <circle cx="22" cy="34" r="3.8" fill="#ffffff"/>
+    <text x="58" y="30" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700" fill="#172033" letter-spacing="0.2">Tiny Dream-RSI</text>
+  </g>
+
+  <text x="64" y="190" font-family="Inter, Arial, sans-serif" font-size="64" font-weight="750" fill="#172033" letter-spacing="-2.8">
+    <tspan x="64" dy="0">Same model.</tspan>
+    <tspan x="64" dy="72" fill="#1478ff">Smarter search.</tspan>
+  </text>
+
+  <g transform="translate(64 338)">
+    <text x="0" y="92" font-family="Inter, Arial, sans-serif" font-size="108" font-weight="760" fill="#172033" letter-spacing="-5">55</text>
+    <path d="M154 54H262M230 23l35 31-35 31" fill="none" stroke="#1478ff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="292" y="92" font-family="Inter, Arial, sans-serif" font-size="108" font-weight="760" fill="#1478ff" letter-spacing="-5">80</text>
+  </g>
+
+  <text x="64" y="548" font-family="Inter, Arial, sans-serif" font-size="21" font-weight="650" fill="#525d73" letter-spacing="0.8">SAME MODEL · SAME 5-SEARCH BUDGET</text>
+
+  <g filter="url(#soft-shadow)">
+    <rect x="672" y="54" width="554" height="532" rx="30" fill="#ffffff" stroke="#bed8ff" stroke-width="2"/>
+    <image x="682" y="64" width="534" height="512" preserveAspectRatio="xMidYMid slice" clip-path="url(#screen-clip)" xlink:href="tiny-dream-rsi-round-2.png"/>
+  </g>
+</svg>
