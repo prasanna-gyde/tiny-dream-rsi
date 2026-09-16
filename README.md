@@ -3,6 +3,10 @@
 > The model doesn't improve.
 > The harness learns how to use the model better.
 
+![Tiny Dream-RSI visualization after the improved search strategy reaches 80](docs/tiny-dream-rsi-round-2.png)
+
+Round 2: the same model and search budget, but a better search strategy reaches 80 instead of 55.
+
 ```text
 1. Explore a problem.
 2. Save the search history.
